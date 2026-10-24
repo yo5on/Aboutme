@@ -1,5 +1,6 @@
 import { Component, Suspense, useRef, type ReactNode } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useThree } from '@react-three/fiber'
+import { PerformanceMonitor } from '@react-three/drei'
 import { MotionConfig, motion, useReducedMotion, useScroll, useTransform, type MotionValue } from 'framer-motion'
 import * as THREE from 'three'
 import Scene from './scene/Scene'
@@ -34,6 +35,21 @@ class ModelErrorBoundary extends Component<
   render() {
     return this.state.error ? null : this.props.children
   }
+}
+
+// Render resolution: full (≤1.5×) on GPUs that keep up; weaker ones step down to 1×, which measured
+// about 2× faster on an Intel UHD 620. Below 1× gained little, the fixed-size DoF pass dominates there.
+const MAX_DPR = Math.min(Math.max(window.devicePixelRatio, 1), 1.5)
+function AdaptiveResolution() {
+  const setDpr = useThree((s) => s.setDpr)
+  return (
+    <PerformanceMonitor
+      flipflops={3}
+      onDecline={() => setDpr(1)}
+      onIncline={() => setDpr(MAX_DPR)}
+      onFallback={() => setDpr(1)}
+    />
+  )
 }
 
 function Hero({ cueOpacity }: { cueOpacity: MotionValue<number> }) {
@@ -122,11 +138,12 @@ export default function App() {
         <div className="scene-bg">
           <Canvas
             shadows={{ type: THREE.PCFShadowMap }}
-            dpr={[1, 1.5]}
+            dpr={MAX_DPR}
             camera={{ position: [0, 1.08, 7.2], fov: 22.9, near: 0.1, far: 500 }}
             gl={{ antialias: false, stencil: false, depth: true, toneMapping: THREE.ACESFilmicToneMapping }}
           >
             <color attach="background" args={['#0a0e16']} />
+            <AdaptiveResolution />
             <ModelErrorBoundary onError={setModelError}>
               <Suspense fallback={null}>
                 <Scene />
