@@ -11,7 +11,7 @@ import { addFaceDetails } from './faceDetails'
 import { addEyeTracking, type EyeRig } from './eyeTracking'
 
 // me.glb is Draco-compressed; the decoder ships in public/draco/ (no third-party CDN)
-const DRACO = './draco/'
+const DRACO = `${import.meta.env.BASE_URL}draco/`
 useGLTF.preload(meUrl, DRACO)
 
 const M = FOCUS_POINTS.length // timeline node count (= résumé entries)
