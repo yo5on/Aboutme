@@ -40,33 +40,23 @@ export interface WorkSection {
 export interface WorksLang {
   title: string
   closeLabel: string
-  openLabel: string
   hint: string
   awardsLabel: string
   visitLabel: string
   detailPlaceholder: string
-  phImageLabel: string
-  phButtonLabel: string
-  countLabel: (n: number) => string
   sections: WorkSection[]
 }
 
 // Portfolio data. Works.tsx only renders it; each item's slug links to src/content/works/<slug>.md.
 // Descriptions come from the project READMEs on github.com/yo5on.
 
-const RAW = 'https://raw.githubusercontent.com/yo5on'
-
 export const WORKS: WorksLang = {
   title: 'Works',
-  closeLabel: 'Back',
-  openLabel: 'Explore',
+  closeLabel: 'Close project details',
   hint: 'Keep scrolling',
   awardsLabel: 'Awards',
   visitLabel: 'Open project',
   detailPlaceholder: 'Details coming soon.',
-  phImageLabel: 'Image / Video',
-  phButtonLabel: 'Link button',
-  countLabel: (n) => `${n} works`,
   sections: [
     {
       id: 'ai',
@@ -78,7 +68,7 @@ export const WORKS: WorksLang = {
         { name: 'Agentic AI Pest Monitoring', meta: 'Team project', tags: ['Agriculture'], slug: 'pest-monitoring' },
         { name: 'AI Personal Tutor', meta: 'Next.js · Gemini', slug: 'ai-tutor' },
       ],
-      footer: 'Explainable scoring · agent workflows · LLM tutoring',
+      footer: 'Rule-based explainable scoring · agent workflows · LLM tutoring',
     },
     {
       id: 'robotics',
@@ -114,18 +104,14 @@ export const WORKS: WorksLang = {
   ],
 }
 
-// Section cover images (real project photos / screenshots from the repos).
-// A cover that fails to load falls back to the numbered placeholder.
+// Section cover images: optimized local copies of real project screenshots / photos
+// (public/works/covers/). Local because the Maze Runner repo stores its images in Git LFS, so its raw
+// GitHub URLs return LFS pointer text instead of images. A cover that fails to load falls back to the
+// numbered placeholder.
+const COVERS = `${import.meta.env.BASE_URL}works/covers`
 export const SECTION_COVERS: Record<string, string> = {
-  ai: `${RAW}/ai-personal-tutor/main/images/dashboard.png`,
-  robotics: `${RAW}/line-follower/main/images/pic1.jpeg`,
-  games: `${RAW}/maze-runner/main/pics/09_level_scene.png`,
-  web: `${RAW}/Personalised-study-planner/main/docs/screenshots/dashboard.png`,
-}
-
-// Number of works in a section (items or groups summed)
-export function sectionCount(section: WorkSection): number {
-  if (section.items) return section.items.length
-  if (section.groups) return section.groups.reduce((n, g) => n + g.items.length, 0)
-  return 0
+  ai: `${COVERS}/ai-tutor.webp`,
+  robotics: `${COVERS}/line-follower.webp`,
+  games: `${COVERS}/maze-runner-level.webp`,
+  web: `${COVERS}/daymark.webp`,
 }

@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState, type Ref } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState, type FocusEvent, type KeyboardEvent as ReactKeyboardEvent, type Ref } from 'react'
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import rehypeRaw from 'rehype-raw'
 import { WORKS, SECTION_COVERS, type WorkListItem, type WorkSection, type WorksLang } from '../data/works'
 import { getWorkDoc } from '../data/workDocs'
+
+const WorkMarkdown = lazy(() => import('./WorkMarkdown'))
 
 const EASE = [0.22, 1, 0.36, 1]
 
@@ -132,6 +131,25 @@ function WorkDetail({
   // 副标题不含年份；标签单独做 badge 展示
   const sub = doc ? [item.meta, doc.role].filter(Boolean).join('  ·  ') : ''
 
+  // Modal dialog: focus moves in on open and Tab stays inside (Works restores focus on close)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    dialogRef.current?.querySelector<HTMLElement>('.wk-detail-close')?.focus()
+  }, [])
+  const trapTab = (e: ReactKeyboardEvent) => {
+    if (e.key !== 'Tab' || !dialogRef.current) return
+    const els = dialogRef.current.querySelectorAll<HTMLElement>('a[href], button')
+    const first = els[0]
+    const last = els[els.length - 1]
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault()
+      last.focus()
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault()
+      first.focus()
+    }
+  }
+
   return (
     <>
       <motion.div
@@ -141,9 +159,15 @@ function WorkDetail({
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
         onClick={onClose}
+        aria-hidden="true"
       />
       <motion.div
+        ref={dialogRef}
         className="wk-detail"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="wk-detail-title"
+        onKeyDown={trapTab}
         initial={{ opacity: 0, scale: 0.985, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.99, y: 6 }}
@@ -165,7 +189,9 @@ function WorkDetail({
 
         <article className="wk-detail-article">
           <header className="wk-detail-head">
-            <h3 className="wk-detail-title">{title}</h3>
+            <h2 className="wk-detail-title" id="wk-detail-title">
+              {title}
+            </h2>
             {sub && <div className="wk-detail-sub">{sub}</div>}
             {tags && tags.length > 0 && (
               <div className="wk-detail-tags">
@@ -180,21 +206,12 @@ function WorkDetail({
 
           {doc && doc.body ? (
             <div className="wk-md">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-                {doc.body}
-              </ReactMarkdown>
+              <Suspense fallback={null}>
+                <WorkMarkdown>{doc.body}</WorkMarkdown>
+              </Suspense>
             </div>
           ) : (
-            // 无 md：演示详情页支持的组件 —— 介绍文本 + 图片/视频占位 + 跳转按钮
-            <>
-              <p className="wk-detail-desc">{data.detailPlaceholder}</p>
-              <div className="wk-detail-ph-img" aria-hidden="true">
-                <span className="wk-detail-ph-img-label">{data.phImageLabel}</span>
-              </div>
-              <span className="wk-detail-link is-ph" role="button" aria-disabled="true">
-                {data.phButtonLabel} <span aria-hidden="true">↗</span>
-              </span>
-            </>
+            <p className="wk-detail-desc">{data.detailPlaceholder}</p>
           )}
 
           {link && (
@@ -222,6 +239,7 @@ export default function Works({ innerRef }: { innerRef: Ref<HTMLElement> }) {
 
   // 竖滚 pin 转横移：测量整排卡片的实际可横移距离（px），竖滚进度 → 横移
   const galleryRef = useRef<HTMLDivElement>(null)
+  const stickyRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({
     target: galleryRef,
@@ -249,6 +267,28 @@ export default function Works({ innerRef }: { innerRef: Ref<HTMLElement> }) {
   // 横移到底时「继续下滑」提示渐隐
   const hintOpacity = useTransform(scrollYProgress, [0.85, 1], [1, 0])
 
+  // Keyboard focus on an off-screen card: the browser would scroll the clipped sticky box sideways
+  // (leaving the track permanently offset) and never bring the card into view. Undo that, and scroll
+  // the page to where the horizontal pan shows the card instead (vertical scroll maps 1:1 to the pan).
+  const onTrackFocus = (e: FocusEvent) => {
+    const card = (e.target as HTMLElement).closest<HTMLElement>('.wk-card')
+    // focus events fire before the browser's own scroll-into-view, so correct after it
+    setTimeout(() => {
+      const gallery = galleryRef.current
+      if (stickyRef.current) stickyRef.current.scrollLeft = 0
+      if (!card || !gallery || scrollRange <= 0) return
+      const pan = Math.min(scrollRange, Math.max(0, card.offsetLeft - (window.innerWidth - card.offsetWidth) / 2))
+      window.scrollTo({ top: gallery.getBoundingClientRect().top + window.scrollY + pan, behavior: 'instant' })
+    })
+  }
+
+  // Return focus to the line that opened the detail once it has closed
+  const opener = useRef<HTMLElement | null>(null)
+  const open = (item: WorkListItem) => {
+    opener.current = document.activeElement as HTMLElement | null
+    setActive(item)
+  }
+
   // 详情打开时锁滚动 + ESC 关闭
   useEffect(() => {
     if (!active) return
@@ -269,12 +309,12 @@ export default function Works({ innerRef }: { innerRef: Ref<HTMLElement> }) {
         ref={galleryRef}
         style={{ height: `calc(100vh + ${scrollRange}px)` }}
       >
-        <div className="wk-gallery-sticky">
+        <div className="wk-gallery-sticky" ref={stickyRef}>
           <span className="wk-gallery-title">{data.title}</span>
 
-          <motion.div className="wk-track" ref={trackRef} style={{ x }}>
+          <motion.div className="wk-track" ref={trackRef} style={{ x }} onFocus={onTrackFocus}>
             {sections.map((s) => (
-              <SectionCard key={s.id} section={s} data={data} onOpen={setActive} />
+              <SectionCard key={s.id} section={s} data={data} onOpen={open} />
             ))}
           </motion.div>
 
@@ -287,7 +327,7 @@ export default function Works({ innerRef }: { innerRef: Ref<HTMLElement> }) {
         </div>
       </div>
 
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={() => opener.current?.focus({ preventScroll: true })}>
         {active && (
           <WorkDetail
             key={active.slug || active.name}

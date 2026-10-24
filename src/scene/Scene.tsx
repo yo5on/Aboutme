@@ -10,7 +10,9 @@ import { useStore } from '../store'
 import { addFaceDetails } from './faceDetails'
 import { addEyeTracking, type EyeRig } from './eyeTracking'
 
-useGLTF.preload(meUrl)
+// me.glb is Draco-compressed; the decoder ships in public/draco/ (no third-party CDN)
+const DRACO = './draco/'
+useGLTF.preload(meUrl, DRACO)
 
 const M = FOCUS_POINTS.length // timeline node count (= résumé entries)
 const RESUME_FRAMES = M * FRAMES_PER_NODE // node k sits at frame k·50
@@ -37,7 +39,7 @@ type Stop = { c: [number, number, number]; f: [number, number, number]; sx: numb
 const STOPS: Stop[] = [
   { c: [0, 1.5, 7.2], f: [0, 1.5, 0.05], sx: 0, sy: -0.058 }, // hero: level, eyes ~37% from the top
   { c: [2.2, 0.75, 1.9], f: [0.33, 1.38, 0.02], sx: 0.2 }, // node 1: low three-quarter, cheek
-  { c: [1.28, 1.25, 1.57], f: [0.29, 1.16, -0.05], sx: 0.05 }, // node 2: square on the cheek kiss
+  { c: [1.28, 1.25, 1.57], f: [0.29, 1.16, -0.05], sx: 0.16 }, // node 2: square on the cheek kiss, kept left of the text
   { c: [-1.6, 1.75, 1.7], f: [-0.25, 1.5, 0.03], sx: 0.2 }, // node 3: swing to the other side, eye level
   { c: [-0.6, 0.55, 2.2], f: [0, 1.4, 0.06], sx: 0.18 }, // node 4: low, looking up at the nose bandage
   { c: [0.64, 1.71, 7.5], f: [0, 1.3, 0.22], sx: 0.1 }, // node 5: pull back to a wide front shot
@@ -173,11 +175,13 @@ function Man({
   }
 
   // Eyes follow the cursor / touch point. maxYaw / maxPitch: gaze angle (deg) for full iris travel.
-  const look = { maxYaw: 15, maxPitch: 10, ease: 0.002 }
-  const gaze = useRef({ x: 0, y: 0 })
+  // freq: spring stiffness (rad/s, ~0.25 s to settle); deadzone: target change (gaze units) to ignore;
+  // glance: size / interval (s) of the small idle eye shifts while the cursor rests.
+  const look = { maxYaw: 15, maxPitch: 10, freq: 16, deadzone: 0.01, glance: 0.06, glanceEvery: [2.5, 6] }
+  const gaze = useRef({ x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, still: 0, next: 3, ix: 0, iy: 0 })
 
   const get = useThree((s) => s.get)
-  const { scene } = useGLTF(meUrl)
+  const { scene } = useGLTF(meUrl, DRACO)
   const eyes = useRef<EyeRig | null>(null)
 
   const model = useMemo(() => {
@@ -250,17 +254,14 @@ function Man({
     return () => window.removeEventListener('mousemove', onMove)
   }, [])
 
-  // Pointer for the eyes, in canvas NDC (null = nothing to look at → eyes ease back to neutral).
+  // Pointer for the eyes in client px (null = nothing to look at → eyes ease back to neutral).
+  // Converted to canvas NDC every frame, so resizing and scrolling never leave it stale.
   // Touch only guides the eyes while a finger is down. All listeners are passive.
-  const pointer = useRef<THREE.Vector2 | null>(null)
+  const pointer = useRef<{ x: number; y: number } | null>(null)
   useEffect(() => {
-    const canvas = get().gl.domElement
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)')
     const set = (cx: number, cy: number) => {
-      const r = canvas.getBoundingClientRect()
-      const x = ((cx - r.left) / r.width) * 2 - 1
-      const y = -(((cy - r.top) / r.height) * 2 - 1)
-      pointer.current = reduce?.matches || Math.abs(x) > 1 || Math.abs(y) > 1 ? null : new THREE.Vector2(x, y)
+      pointer.current = reduce?.matches ? null : { x: cx, y: cy }
     }
     const clear = () => (pointer.current = null)
     const onPointer = (e: PointerEvent) => e.pointerType !== 'touch' && set(e.clientX, e.clientY)
@@ -284,6 +285,7 @@ function Man({
     }
   }, [get])
   const ray = useRef(new THREE.Raycaster())
+  const ndc = useRef(new THREE.Vector2())
   const eyeMid = useRef(new THREE.Vector3())
   const lookAt = useRef(new THREE.Vector3())
 
@@ -292,6 +294,9 @@ function Man({
     typeof window !== 'undefined' &&
       (window.matchMedia?.('(pointer: coarse)').matches === true || window.innerWidth <= 640)
   )
+
+  // Reduced motion: no cursor parallax and no turntable spin; the camera only moves with the scroll
+  const reduceMotion = useRef(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true)
 
   const anchorEls = useRef<any>(null)
   const galleryEl = useRef<any>(null)
@@ -380,7 +385,7 @@ function Man({
     const sy = THREE.MathUtils.lerp(STOPS[iA].sy ?? 0, STOPS[iA + 1].sy ?? 0, f)
 
     // Works turntable spin (ease in/out across the entrance + pan)
-    if (spinRef.current) {
+    if (spinRef.current && !reduceMotion.current) {
       const spin = THREE.MathUtils.smoothstep(frame, RESUME_FRAMES, TOTAL_FRAMES - 4)
       spinRef.current.rotation.set(0, MODEL.worksSpin * spin, 0)
     }
@@ -393,7 +398,7 @@ function Man({
     const me = 1 - Math.pow(cam.parallaxEase, dt)
     smouse.current.x += (mouse.current.x - smouse.current.x) * me
     smouse.current.y += (mouse.current.y - smouse.current.y) * me
-    const ax = THREE.MathUtils.degToRad(cam.parallax)
+    const ax = reduceMotion.current ? 0 : THREE.MathUtils.degToRad(cam.parallax)
     paraEuler.current.set(-smouse.current.y * ax, -smouse.current.x * ax, 0)
     paraQuat.current.setFromEuler(paraEuler.current)
     tmpVec.current.copy(camPos.current).sub(focusRef.current).applyQuaternion(paraQuat.current)
@@ -465,24 +470,59 @@ function Man({
       }
     }
 
-    // 6) Eyes: aim at the point under the pointer (at the eyes' depth), measured in model space so it
-    //    holds for every camera stop and the works spin; ease toward it, or back to neutral
+    // 6) Eyes: look at a point in front of the face, halfway along the pointer's ray from the camera
+    //    (the viewer). Measured in model space, so it holds for every camera stop, the parallax and the
+    //    works spin. (Aiming at the ray's point level with the eyes put the target beside the face, so
+    //    every off-centre pointer saturated the gaze.) Both eyes share one parallel gaze: no crossing.
     if (eyes.current && rim) {
       let gx = 0
       let gy = 0
-      if (pointer.current) {
+      const r = pointer.current && get().gl.domElement.getBoundingClientRect()
+      if (pointer.current && r) {
+        ndc.current.set(((pointer.current.x - r.left) / r.width) * 2 - 1, -(((pointer.current.y - r.top) / r.height) * 2 - 1))
+      }
+      const inside = !!r && Math.abs(ndc.current.x) <= 1 && Math.abs(ndc.current.y) <= 1
+      if (inside) {
         camera.updateMatrixWorld()
         const mid = rim.mesh.localToWorld(eyeMid.current.copy(EYE_MID))
-        ray.current.setFromCamera(pointer.current, camera)
-        const target = ray.current.ray.at(camera.position.distanceTo(mid), lookAt.current)
+        ray.current.setFromCamera(ndc.current, camera)
+        const target = ray.current.ray.at(camera.position.distanceTo(mid) * 0.5, lookAt.current)
         const d = rim.mesh.worldToLocal(target).sub(EYE_MID)
-        gx = THREE.MathUtils.clamp(Math.atan2(-d.z, d.x) / THREE.MathUtils.degToRad(look.maxYaw), -1, 1)
-        gy = THREE.MathUtils.clamp(Math.atan2(d.y, Math.hypot(d.x, d.z)) / THREE.MathUtils.degToRad(look.maxPitch), -1, 1)
+        gx = Math.atan2(-d.z, d.x) / THREE.MathUtils.degToRad(look.maxYaw)
+        gy = Math.atan2(d.y, Math.hypot(d.x, d.z)) / THREE.MathUtils.degToRad(look.maxPitch)
+        // elliptical limit, so diagonals can't push the iris past either axis' travel
+        const len = Math.hypot(gx, gy)
+        if (len > 1) {
+          gx /= len
+          gy /= len
+        }
       }
-      const ge = 1 - Math.pow(look.ease, dt)
-      gaze.current.x += (gx - gaze.current.x) * ge
-      gaze.current.y += (gy - gaze.current.y) * ge
-      eyes.current.setGaze(gaze.current.x, gaze.current.y)
+      const g = gaze.current
+      // Deadzone: sub-pixel pointer noise never moves the target, so a resting cursor gives a still gaze
+      if (Math.hypot(gx - g.tx, gy - g.ty) > look.deadzone) {
+        g.tx = gx
+        g.ty = gy
+        g.still = g.ix = g.iy = 0
+      } else if (inside && (g.still += dt) > g.next) {
+        // Cursor resting: now and then a tiny glance off the fixation point and back, like a real gaze
+        const back = g.ix !== 0 || g.iy !== 0
+        g.ix = back ? 0 : (Math.random() * 2 - 1) * look.glance
+        g.iy = back ? 0 : (Math.random() * 2 - 1) * look.glance * 0.6
+        g.next = g.still + (back ? 0.4 + Math.random() * 0.6 : THREE.MathUtils.randFloat(look.glanceEvery[0], look.glanceEvery[1]))
+      }
+      // Critically damped spring (exact step, so the same motion at any frame rate): eases in and out of
+      // every change of direction and never overshoots past the iris travel limit
+      const w = look.freq
+      const e = Math.exp(-w * dt)
+      const dx = g.x - (g.tx + g.ix)
+      const dy = g.y - (g.ty + g.iy)
+      const cx = g.vx + w * dx
+      const cy = g.vy + w * dy
+      g.x = g.tx + g.ix + (dx + cx * dt) * e
+      g.y = g.ty + g.iy + (dy + cy * dt) * e
+      g.vx = (g.vx - w * cx * dt) * e
+      g.vy = (g.vy - w * cy * dt) * e
+      eyes.current.setGaze(g.x, g.y)
     }
   })
 

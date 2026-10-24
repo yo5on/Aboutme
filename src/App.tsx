@@ -1,25 +1,14 @@
 import { Component, Suspense, useRef, type ReactNode } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { motion, useScroll, useTransform, type MotionValue } from 'framer-motion'
+import { MotionConfig, motion, useReducedMotion, useScroll, useTransform, type MotionValue } from 'framer-motion'
 import * as THREE from 'three'
 import Scene from './scene/Scene'
 import NoiseOverlay from './ui/NoiseOverlay'
 import Resume from './ui/Resume'
 import Works from './ui/Works'
 import LoadingScreen from './ui/LoadingScreen'
-import { useStore } from './store'
-import { GithubIcon, LinkedinIcon } from './ui/SocialIcons'
-
-function Backdrop() {
-  // 点击空白处收起详情
-  const setActive = useStore((s) => s.setActive)
-  return (
-    <mesh position={[0, 0, -40]} onClick={() => setActive(null)}>
-      <planeGeometry args={[600, 300]} />
-      <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-    </mesh>
-  )
-}
+import { HAS_WEBGL, useStore } from './store'
+import { GithubIcon, LinkedinIcon, MailIcon } from './ui/SocialIcons'
 
 // About copy
 const COPY = {
@@ -63,21 +52,23 @@ function Hero({ cueOpacity }: { cueOpacity: MotionValue<number> }) {
   const titleY = useTransform(scrollYProgress, [0, 1], [0, -96])
   const bodyY = useTransform(scrollYProgress, [0, 1], [0, -52])
   const titleSpacing = useTransform(scrollYProgress, [0, 1], ['0.01em', '0.42em'])
+  // Reduced motion: keep the fade-out, drop the blur, parallax and letter-spacing sweep
+  const reduce = useReducedMotion()
   return (
     <section className="hero">
       <motion.div
         className="about"
         lang="en"
         ref={aboutRef}
-        style={{ filter: blur, opacity }}
+        style={reduce ? { opacity } : { filter: blur, opacity }}
       >
         {/* 入场动画放内层，避免其 fill 锁住 opacity 覆盖外层滚动 opacity */}
         <div className="about-intro">
-          <motion.h1 className="about-title" style={{ y: titleY, letterSpacing: titleSpacing }}>
+          <motion.h1 className="about-title" style={reduce ? undefined : { y: titleY, letterSpacing: titleSpacing }}>
             {title}
           </motion.h1>
           {paragraphs.map((p, i) => (
-            <motion.p key={i} className="about-body" style={{ y: bodyY }}>
+            <motion.p key={i} className="about-body" style={reduce ? undefined : { y: bodyY }}>
               {p}
             </motion.p>
           ))}
@@ -108,7 +99,6 @@ export default function App() {
     [0, 1],
     ['rgba(8, 11, 18, 0)', 'rgba(8, 11, 18, 0.41)'] // 压暗减半（原 0.82）
   )
-  const fogBlur = useTransform(worksProgress, [0, 1], ['blur(0px)', 'blur(10px)'])
   // 滚动渐暗：离开首屏后压暗 3D 场景，保证履历文字可读
   const scrimOpacity = useTransform(scrollY, [0, 520], [0, 0.4])
   // 首屏滚动提示随之淡出
@@ -122,51 +112,49 @@ export default function App() {
   const heroChromeOpacity = useTransform(scrollY, [0, 280], [1, 0])
 
   return (
-    <>
+    <MotionConfig reducedMotion="user">
       {/* 加载遮罩：模型全部加载完成前覆盖全屏，完成后淡出 */}
       <LoadingScreen />
 
       {/* 固定的 3D 背景 */}
-      <div className="scene-bg">
-        <Canvas
-          shadows={{ type: THREE.PCFShadowMap }}
-          dpr={[1, 1.5]}
-          camera={{ position: [0, 1.08, 7.2], fov: 22.9, near: 0.1, far: 500 }}
-          gl={{ antialias: false, stencil: false, depth: true, toneMapping: THREE.ACESFilmicToneMapping }}
-        >
-          <color attach="background" args={['#0a0e16']} />
-          <ModelErrorBoundary onError={setModelError}>
-            <Suspense fallback={null}>
-              <Backdrop />
-              <Scene />
-            </Suspense>
-          </ModelErrorBoundary>
-        </Canvas>
-      </div>
+      {!HAS_WEBGL && <div className="scene-bg scene-fallback" aria-hidden="true" />}
+      {HAS_WEBGL && (
+        <div className="scene-bg">
+          <Canvas
+            shadows={{ type: THREE.PCFShadowMap }}
+            dpr={[1, 1.5]}
+            camera={{ position: [0, 1.08, 7.2], fov: 22.9, near: 0.1, far: 500 }}
+            gl={{ antialias: false, stencil: false, depth: true, toneMapping: THREE.ACESFilmicToneMapping }}
+          >
+            <color attach="background" args={['#0a0e16']} />
+            <ModelErrorBoundary onError={setModelError}>
+              <Suspense fallback={null}>
+                <Scene />
+              </Suspense>
+            </ModelErrorBoundary>
+          </Canvas>
+        </div>
+      )}
 
       {/* 滚动渐暗蒙层 */}
       <motion.div className="scrim" style={{ opacity: scrimOpacity }} aria-hidden="true" />
 
-      {/* 作品区固定蒙层：仅压暗（减半），模糊先注释掉 */}
+      {/* 作品区固定蒙层：随滚动压暗 3D */}
       <motion.div
         className="stage-fog"
-        style={{ background: fogBg /* , backdropFilter: fogBlur, WebkitBackdropFilter: fogBlur */ }}
+        style={{ background: fogBg }}
         aria-hidden="true"
       />
 
       {/* 固定磨砂右轨（进入履历区淡入） */}
       <motion.div className="glass-rail" style={{ opacity: railOpacity }} aria-hidden="true" />
 
-      {/* 首屏底部渐变底色，滚动后淡出 —— 暂时注释查看效果 */}
-      {/* <motion.div
-        className="hero-gradient"
-        style={{ opacity: heroGradientOpacity }}
-        aria-hidden="true"
-      /> */}
+      {/* 首屏底部渐变底色（衬托首屏文字），滚动后淡出 */}
+      <motion.div className="hero-gradient" style={{ opacity: heroGradientOpacity }} aria-hidden="true" />
 
       {modelError && (
         <p className="model-error" role="alert">
-          The 3D model couldn't be loaded. Check that me.glb is in the project root and reload.
+          The 3D portrait can't be shown in this browser, but everything else on the page still works.
         </p>
       )}
 
@@ -200,10 +188,13 @@ export default function App() {
         >
           <LinkedinIcon />
         </a>
+        <a href="mailto:yo5on2025@gmail.com" aria-label="Email yo5on2025@gmail.com" title="Email">
+          <MailIcon />
+        </a>
       </nav>
 
       {/* 全屏胶片噪点蒙层（multiply 混合） */}
-      <NoiseOverlay />
+      {HAS_WEBGL && <NoiseOverlay />}
 
       {/* 可滚动内容 */}
       <main className="content">
@@ -211,6 +202,6 @@ export default function App() {
         <Resume />
         <Works innerRef={worksRef} />
       </main>
-    </>
+    </MotionConfig>
   )
 }

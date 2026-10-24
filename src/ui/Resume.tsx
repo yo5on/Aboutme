@@ -40,9 +40,9 @@ const RESUME: { title: string; entries: ResumeEntry[] } = {
       place: 'FakeGuard',
       role: 'Social media account risk analyzer',
       points: [
-        'Explainable 0–100 risk score with LOW → CRITICAL categories and reason codes',
+        'Rule-based, explainable 0–100 risk score with LOW → CRITICAL categories and reason codes',
         'FastAPI + SQLAlchemy backend, React + TypeScript dashboard, CSV batch import',
-        'Decision support for human reviewers, built on synthetic data',
+        'Decision support for human reviewers, built on synthetic data; ML detection is planned future work',
       ],
     },
     {

@@ -16,12 +16,13 @@ export default function LoadingScreen() {
   const peak = useRef(0)
   peak.current = Math.max(peak.current, Math.min(Math.max(progress, 0), 100))
 
-  // Downloads finishing isn't enough: a 65 MB glb still needs seconds to parse and upload,
+  // Downloads finishing isn't enough: the glb still needs time to decode and upload,
   // so also wait for the model to be mounted (store.ready). A failed load ends at 100% too.
   const ready = useStore((s) => s.ready)
   const modelError = useStore((s) => s.modelError)
   useEffect(() => {
-    if (progress >= 100 && (ready || modelError)) setReached(true)
+    // modelError also covers "no WebGL", where nothing loads and progress never moves
+    if ((progress >= 100 && ready) || modelError) setReached(true)
   }, [progress, ready, modelError])
 
   // 到过 100% 后：停留片刻 → 淡出 → 卸载（一次性，锁定不受后续进度变化影响）
