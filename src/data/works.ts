@@ -3,7 +3,6 @@
 //
 // 板块字段：
 //   id        唯一标识（用于 framer layoutId 共享元素动画）
-//   no        编号 '01'…'05'
 //   title     板块标题
 //   tagline   索引行右侧一句话
 //   items[]   扁平作品列表：{ name, meta?, tags?, link? }
@@ -28,7 +27,6 @@ export interface WorkGroup {
 
 export interface WorkSection {
   id: string
-  no: string
   title: string
   tagline: string
   items?: WorkListItem[]
@@ -60,7 +58,6 @@ export const WORKS: WorksLang = {
   sections: [
     {
       id: 'ai',
-      no: '01',
       title: 'AI & ML',
       tagline: 'Python · FastAPI · Gemini · agentic workflows',
       items: [
@@ -72,7 +69,6 @@ export const WORKS: WorksLang = {
     },
     {
       id: 'robotics',
-      no: '02',
       title: 'Robotics',
       tagline: 'ESP32 · Arduino · C / C++',
       items: [
@@ -85,14 +81,12 @@ export const WORKS: WorksLang = {
     },
     {
       id: 'games',
-      no: '03',
       title: 'Games',
       tagline: 'Unity · C#',
       items: [{ name: 'Maze Runner', meta: 'Play in browser', tags: ['2D platformer'], slug: 'maze-runner' }],
     },
     {
       id: 'web',
-      no: '04',
       title: 'Web',
       tagline: 'React · TypeScript · three.js',
       items: [
@@ -106,8 +100,8 @@ export const WORKS: WorksLang = {
 
 // Section cover images: optimized local copies of real project screenshots / photos
 // (public/works/covers/). Local because the Maze Runner repo stores its images in Git LFS, so its raw
-// GitHub URLs return LFS pointer text instead of images. A cover that fails to load falls back to the
-// numbered placeholder.
+// GitHub URLs return LFS pointer text instead of images. A cover that fails to load falls back to a
+// titled placeholder.
 const COVERS = `${import.meta.env.BASE_URL}works/covers`
 export const SECTION_COVERS: Record<string, string> = {
   ai: `${COVERS}/ai-tutor.webp`,

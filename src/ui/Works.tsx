@@ -45,7 +45,6 @@ function SectionCard({
   return (
     <div className="wk-card">
       <div className="wk-card-head">
-        <span className="wk-card-no">{section.no}</span>
         <h3 className="wk-card-title">{section.title}</h3>
         <span className="wk-card-tagline">{section.tagline}</span>
       </div>
@@ -54,7 +53,7 @@ function SectionCard({
           <img src={cover} alt="" onError={() => setCoverError(true)} />
         ) : (
           <div className="wk-card-cover-ph" aria-hidden="true">
-            <span className="wk-card-cover-no">{section.no}</span>
+            <span className="wk-card-cover-no">{section.title}</span>
           </div>
         )}
       </div>
@@ -174,7 +173,9 @@ function WorkDetail({
         transition={{ duration: 0.42, ease: EASE }}
       >
         <button className="wk-detail-close" onClick={onClose} aria-label={data.closeLabel}>
-          ✕
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
         </button>
 
         {banner && !bannerError ? (
@@ -307,7 +308,7 @@ export default function Works({ innerRef }: { innerRef: Ref<HTMLElement> }) {
       <div
         className="wk-gallery"
         ref={galleryRef}
-        style={{ height: `calc(100vh + ${scrollRange}px)` }}
+        style={{ height: `calc(100svh + ${scrollRange}px)` }}
       >
         <div className="wk-gallery-sticky" ref={stickyRef}>
           <span className="wk-gallery-title">{data.title}</span>

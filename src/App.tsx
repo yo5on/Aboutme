@@ -7,7 +7,6 @@ import Scene from './scene/Scene'
 import NoiseOverlay from './ui/NoiseOverlay'
 import Resume from './ui/Resume'
 import Works from './ui/Works'
-import LoadingScreen from './ui/LoadingScreen'
 import { HAS_WEBGL, useStore } from './store'
 import { GithubIcon, LinkedinIcon, MailIcon } from './ui/SocialIcons'
 
@@ -91,7 +90,7 @@ function Hero({ cueOpacity }: { cueOpacity: MotionValue<number> }) {
         </div>
       </motion.div>
       <motion.div className="scroll-cue" style={{ opacity: cueOpacity }} aria-hidden="true">
-        <span className="scroll-cue-label">SCROLL</span>
+        <span className="scroll-cue-label">Scroll</span>
         <span className="scroll-cue-track">
           <span className="scroll-cue-dot" />
         </span>
@@ -102,6 +101,7 @@ function Hero({ cueOpacity }: { cueOpacity: MotionValue<number> }) {
 
 export default function App() {
   const modelError = useStore((s) => s.modelError)
+  const ready = useStore((s) => s.ready)
   const setModelError = useStore((s) => s.setModelError)
   const { scrollY } = useScroll()
   // 作品区蒙层：以作品区顶部从视口底进入到视口中部的进度，驱动 3D 渐暗 + 模糊
@@ -124,23 +124,24 @@ export default function App() {
   // 磨砂右轨：进入履历区后淡入（首屏不磨砂）
   const vh = typeof window !== 'undefined' ? window.innerHeight : 800
   const railOpacity = useTransform(scrollY, [vh * 0.5, vh * 1.1], [0, 1])
-  // 首屏装饰画框/角标：滚动后淡出
-  const heroChromeOpacity = useTransform(scrollY, [0, 280], [1, 0])
 
   return (
     <MotionConfig reducedMotion="user">
-      {/* 加载遮罩：模型全部加载完成前覆盖全屏，完成后淡出 */}
-      <LoadingScreen />
-
-      {/* 固定的 3D 背景 */}
+      {/* 固定的 3D 背景（模型挂载后淡入，文字首帧即可读） */}
       {!HAS_WEBGL && <div className="scene-bg scene-fallback" aria-hidden="true" />}
       {HAS_WEBGL && (
-        <div className="scene-bg">
+        <div className={`scene-bg scene-fade${ready ? ' is-ready' : ''}`}>
           <Canvas
             shadows={{ type: THREE.PCFShadowMap }}
             dpr={MAX_DPR}
             camera={{ position: [0, 1.08, 7.2], fov: 22.9, near: 0.1, far: 500 }}
-            gl={{ antialias: false, stencil: false, depth: true, toneMapping: THREE.ACESFilmicToneMapping }}
+            gl={{
+              antialias: false,
+              stencil: false,
+              depth: true,
+              toneMapping: THREE.ACESFilmicToneMapping,
+              powerPreference: 'high-performance', // the noise canvas already asks for it; keep both on one GPU
+            }}
           >
             <color attach="background" args={['#0a0e16']} />
             <AdaptiveResolution />
@@ -174,22 +175,6 @@ export default function App() {
           The 3D portrait can't be shown in this browser, but everything else on the page still works.
         </p>
       )}
-
-      {/* 首屏装饰：发丝内框 + 四角定位标 + 角标元数据（随滚动淡出） */}
-      <motion.div className="hero-chrome" style={{ opacity: heroChromeOpacity }} aria-hidden="true">
-        <div className="hero-frame" />
-        <span className="hero-mark tl">+</span>
-        <span className="hero-mark tr">+</span>
-        <span className="hero-mark bl">+</span>
-        <span className="hero-mark br">+</span>
-        <div className="hero-meta hm-tl">
-          <span className="hm-name">Yoson</span>
-          <span>CSE · AI &amp; ML</span>
-        </div>
-        <div className="hero-meta hm-tr">Portfolio — 2026</div>
-        <div className="hero-meta hm-bl">Code · Robots · Play</div>
-        <div className="hero-meta hm-right">Based in Bangalore</div>
-      </motion.div>
 
       {/* Profile links (top right, like the live reference's GitHub button) */}
       <nav className="top-links" aria-label="Profiles">

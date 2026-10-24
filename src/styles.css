@@ -57,7 +57,7 @@ canvas {
   pointer-events: none;
   /* 仅右侧（时间轴所在）压暗，向左平滑渐隐。
      配合 framer 上限 0.4：时间轴左缘 alpha≈0.75(→0.3)、右侧 1.0(→0.4) */
-  background: linear-gradient(
+  background: linear-gradient( /* taste-skill-ignore: neutral legibility scrim over the 3D scene */
     to right,
     rgba(10, 14, 22, 0) 20%,
     rgba(10, 14, 22, 0.75) 58%,
@@ -83,13 +83,14 @@ canvas {
   background: rgba(10, 14, 22, 0.14);
   backdrop-filter: blur(9px);
   -webkit-backdrop-filter: blur(9px);
-  -webkit-mask: linear-gradient(to right, transparent 0%, #000 46%);
-  mask: linear-gradient(to right, transparent 0%, #000 46%);
+  -webkit-mask: linear-gradient(to right, transparent 0%, #000 46%); /* taste-skill-ignore: soft mask edge, not a fill */
+  mask: linear-gradient(to right, transparent 0%, #000 46%); /* taste-skill-ignore: soft mask edge, not a fill */
 }
 
 /* ---------- 首屏 ---------- */
 .hero {
   min-height: 100vh;
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -108,7 +109,7 @@ canvas {
   z-index: 2;
   pointer-events: none;
   /* 深墨绿；衬在首屏标题/正文之后，向上淡为 0 */
-  background: linear-gradient(to top, rgba(9, 33, 22, 0.62) 0%, rgba(9, 33, 22, 0.32) 45%, rgba(9, 33, 22, 0) 100%);
+  background: linear-gradient(to top, rgba(9, 33, 22, 0.86) 0%, rgba(9, 33, 22, 0.6) 40%, rgba(9, 33, 22, 0) 100%); /* taste-skill-ignore: legibility scrim over the 3D portrait, in its own deep green */
 }
 
 .scroll-cue {
@@ -117,9 +118,8 @@ canvas {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  font-size: 10px;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.06em;
   color: var(--muted);
   pointer-events: none;
 }
@@ -134,7 +134,6 @@ canvas {
   width: 1px;
   height: 44px;
   overflow: hidden;
-  background: linear-gradient(rgba(244, 241, 234, 0.28), rgba(244, 241, 234, 0.04));
 }
 
 .scroll-cue-dot {
@@ -146,7 +145,6 @@ canvas {
   margin-left: -1.5px;
   border-radius: 2px;
   background: #ffd9b3;
-  box-shadow: 0 0 6px rgba(255, 217, 179, 0.8);
   animation: cueDot 1.9s cubic-bezier(0.65, 0, 0.35, 1) infinite;
 }
 
@@ -177,95 +175,6 @@ canvas {
   }
 }
 
-/* ---------- 首屏装饰画框 + 角标元数据 ---------- */
-.hero-chrome {
-  --m: clamp(16px, 2.4vh, 30px);
-  position: fixed;
-  inset: 0;
-  z-index: 12;
-  pointer-events: none;
-  font-family: 'Helvetica Neue', 'Chiron GoRound TC', 'PingFang SC', system-ui, sans-serif;
-}
-
-/* 发丝内框 */
-.hero-frame {
-  position: absolute;
-  inset: var(--m);
-  border: 1px solid rgba(244, 241, 234, 0.1);
-}
-
-/* 四角定位标 “+” */
-.hero-mark {
-  position: absolute;
-  font-size: 13px;
-  line-height: 1;
-  color: rgba(244, 241, 234, 0.32);
-}
-.hero-mark.tl {
-  top: var(--m);
-  left: var(--m);
-  transform: translate(-50%, -50%);
-}
-.hero-mark.tr {
-  top: var(--m);
-  right: var(--m);
-  transform: translate(50%, -50%);
-}
-.hero-mark.bl {
-  bottom: var(--m);
-  left: var(--m);
-  transform: translate(-50%, 50%);
-}
-.hero-mark.br {
-  bottom: var(--m);
-  right: var(--m);
-  transform: translate(50%, 50%);
-}
-
-/* 角标元数据小字 */
-.hero-meta {
-  position: absolute;
-  font-size: clamp(9px, 0.9vw, 11px);
-  letter-spacing: 0.26em;
-  text-transform: uppercase;
-  line-height: 1.6;
-  color: rgba(244, 241, 234, 0.46);
-}
-.hero-meta .hm-name {
-  display: block;
-  text-transform: none;
-  letter-spacing: 0.12em;
-  color: rgba(244, 241, 234, 0.7);
-}
-.hm-tl {
-  top: calc(var(--m) + 16px);
-  left: calc(var(--m) + 20px);
-}
-.hm-tr {
-  top: calc(var(--m) + 16px);
-  right: calc(var(--m) + 142px); /* clears the three top-right profile buttons */
-  text-align: right;
-}
-.hm-bl {
-  bottom: calc(var(--m) + 16px);
-  left: calc(var(--m) + 20px);
-}
-.hm-right {
-  top: 50%;
-  right: calc(var(--m) + 7px);
-  writing-mode: vertical-rl;
-  transform: translateY(-50%);
-  letter-spacing: 0.3em;
-}
-
-/* 窄屏隐藏侧边竖排，避免拥挤 */
-@media (max-width: 640px) {
-  .hm-right,
-  .hm-tr {
-    display: none;
-  }
-}
-
 /* ---------- About 叠层（标题 Rancho + 正文 Cormorant Upright） ---------- */
 .about {
   text-align: center;
@@ -274,7 +183,7 @@ canvas {
 }
 /* 入场动画放内层：其 fill:both 只锁内层 opacity，不影响外层滚动 opacity */
 .about-intro {
-  animation: fadeDown 1.8s ease both;
+  animation: settleDown 0.9s ease both;
 }
 
 .about-title {
@@ -285,7 +194,6 @@ canvas {
   letter-spacing: 0.01em;
   color: var(--ink);
   margin-bottom: 0.3em;
-  text-shadow: 0 2px 18px rgba(8, 11, 18, 0.35);
 }
 
 .about-body {
@@ -294,24 +202,24 @@ canvas {
   font-family: 'Cormorant Upright', 'Chiron GoRound TC', 'PingFang SC', 'Microsoft YaHei', serif;
   font-weight: 500;
   /* readable floor: the old 8px minimum was illegible over the bright shirt */
-  font-size: clamp(15px, 1.15vw, 18px);
+  font-size: clamp(16px, 1.15vw, 18px);
   line-height: 1.45;
   color: var(--ink);
-  text-shadow: 0 1px 2px rgba(8, 11, 18, 0.7), 0 0 18px rgba(8, 11, 18, 0.45);
 }
 
 /* 正文内 ZOOOP 链接：容器是 pointer-events:none，链接需单独开启可点 */
 .about-link {
   pointer-events: auto;
   color: inherit;
-  text-decoration: none;
-  border-bottom: 1px solid rgba(244, 241, 234, 0.45);
-  transition: color 0.2s ease, border-color 0.2s ease;
+  text-decoration: underline;
+  text-decoration-color: rgba(244, 241, 234, 0.45);
+  text-underline-offset: 0.2em;
+  transition: color 0.2s ease, text-decoration-color 0.2s ease;
 }
 
 .about-link:hover {
   color: #ffd9b3;
-  border-bottom-color: #ffd9b3;
+  text-decoration-color: #ffd9b3;
 }
 
 /* ---------- 履历时间轴 ---------- */
@@ -347,7 +255,7 @@ canvas {
   top: 8px;
   bottom: 8px;
   width: 1px;
-  background: linear-gradient(rgba(244, 241, 234, 0.28), rgba(244, 241, 234, 0.04));
+  background: rgba(244, 241, 234, 0.2); /* taste-skill-ignore: the timeline spine joins the dots; structure, not a divider */
 }
 
 .tl-entry {
@@ -371,7 +279,6 @@ canvas {
   height: 11px;
   border-radius: 50%;
   background: #ffd9b3;
-  box-shadow: 0 0 0 4px rgba(255, 217, 179, 0.12);
 }
 
 .tl-period {
@@ -431,7 +338,7 @@ canvas {
 .tl-points li {
   position: relative;
   padding-left: 1.1em;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.6;
   color: rgba(244, 241, 234, 0.95);
 }
@@ -475,7 +382,7 @@ canvas {
 }
 
 .tl-group-sub {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 400;
   letter-spacing: 0.04em;
   color: var(--muted);
@@ -496,10 +403,9 @@ canvas {
   width: 44px;
   height: 44px;
   color: rgba(244, 241, 234, 0.92);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(244, 241, 234, 0.32);
+  background: rgba(244, 241, 234, 0.1);
   border-radius: 50%;
-  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+  transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
 }
 
 .tl-logo svg {
@@ -509,18 +415,16 @@ canvas {
 
 .tl-logo:hover {
   color: var(--ink);
-  border-color: rgba(244, 241, 234, 0.4);
-  background: rgba(244, 241, 234, 0.06);
+  background: rgba(244, 241, 234, 0.18);
   transform: translateY(-2px);
 }
 
-@keyframes fadeDown {
+/* Transform only: the title stays fully readable from the first frame, even while the 3D model decodes */
+@keyframes settleDown {
   from {
-    opacity: 0;
-    transform: translateY(-16px);
+    transform: translateY(-12px);
   }
   to {
-    opacity: 1;
     transform: translateY(0);
   }
 }
@@ -551,6 +455,7 @@ canvas {
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100svh;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -578,16 +483,14 @@ canvas {
   width: var(--wk-card-w);
   height: 100%;
   padding: clamp(56px, 11vh, 132px) clamp(40px, 5vw, 76px) clamp(40px, 7vh, 80px);
-  /* 去圆角，相邻处以左边框作分隔 */
-  border: none;
-  border-left: 1px solid var(--line);
   /* 不透明实底（无 backdrop-filter）：横移时不实时模糊背景，避免卡顿 */
   background: rgba(13, 17, 25, 0.66);
   color: var(--ink);
   text-align: left;
 }
-.wk-card:last-child {
-  border-right: 1px solid var(--line);
+/* Neighbouring cards are told apart by a tone step, not a rule */
+.wk-card:nth-child(even) {
+  background: rgba(22, 27, 36, 0.7);
 }
 
 /* 小横图：右侧错落（align-self 右对齐 + 内缩留白），不抢主体 */
@@ -600,7 +503,6 @@ canvas {
   aspect-ratio: 3 / 2;
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid var(--line);
   background: #1d2124;
 }
 .wk-card-cover img {
@@ -614,11 +516,11 @@ canvas {
   inset: 0;
   display: grid;
   place-items: center;
-  background: radial-gradient(120% 120% at 30% 25%, rgba(48, 55, 60, 0.5), rgba(29, 33, 36, 0.98));
+  background: #1d2124;
 }
 .wk-card-cover-no {
   font-family: 'Cormorant Upright', 'Chiron GoRound TC', 'PingFang SC', serif;
-  font-size: clamp(40px, 7vw, 88px);
+  font-size: clamp(28px, 3.4vw, 44px);
   font-weight: 600;
   line-height: 1;
   color: rgba(244, 241, 234, 0.16);
@@ -627,16 +529,6 @@ canvas {
 .wk-card-head {
   flex: none;
 }
-.wk-card-no {
-  display: block;
-  font-family: 'Helvetica Neue', system-ui, sans-serif;
-  font-size: clamp(11px, 1.2vw, 13px);
-  letter-spacing: 0.3em;
-  color: rgba(244, 241, 234, 0.4);
-  font-variant-numeric: tabular-nums;
-  margin-bottom: 1.1em;
-}
-
 .wk-card-title {
   font-size: clamp(24px, 3.4vw, 44px);
   font-weight: 600;
@@ -647,8 +539,8 @@ canvas {
 .wk-card-tagline {
   display: block;
   margin-top: 0.7em;
-  font-size: clamp(12px, 1.2vw, 14px);
-  letter-spacing: 0.06em;
+  font-size: 15px;
+  letter-spacing: 0.02em;
   color: var(--muted);
 }
 
@@ -699,9 +591,8 @@ canvas {
   bottom: clamp(20px, 5vh, 48px);
   right: clamp(24px, 6vw, 80px);
   z-index: 2;
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.04em;
   color: var(--muted);
   pointer-events: none;
 }
@@ -710,13 +601,6 @@ canvas {
 .wk-list {
   list-style: none;
   margin: 0;
-}
-
-.wk-line {
-  border-bottom: 1px solid rgba(244, 241, 234, 0.09);
-}
-.wk-line:last-child {
-  border-bottom: none;
 }
 
 /* 整行按钮：名靠左、数据靠右；hover 暖色微缩进 */
@@ -738,11 +622,10 @@ canvas {
 .wk-line-btn:hover,
 .wk-line-btn:focus-visible {
   padding-left: 10px;
-  outline: none;
 }
 
 .wk-line-name {
-  font-size: clamp(13px, 1.35vw, 16px);
+  font-size: clamp(16px, 1.35vw, 18px);
   font-weight: 400;
   line-height: 1.35;
   letter-spacing: 0.01em;
@@ -766,16 +649,16 @@ canvas {
   max-width: 46%;
 }
 .wk-line-num {
-  font-size: clamp(11px, 1.15vw, 13px);
+  font-size: 14px;
   font-weight: 500;
   letter-spacing: 0.04em;
   color: #ffd9b3;
   white-space: nowrap;
 }
 .wk-line-tag {
-  font-size: clamp(10px, 1vw, 12px);
-  letter-spacing: 0.03em;
-  color: rgba(244, 241, 234, 0.5);
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  color: rgba(244, 241, 234, 0.6);
   white-space: nowrap;
 }
 .wk-line-tag::before {
@@ -792,24 +675,21 @@ canvas {
   margin-top: 0;
 }
 .wk-sub-head {
-  font-size: 12px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--muted);
   margin-bottom: 6px;
 }
 
 /* 底部小字：奖项 / 技术 */
 .wk-foot {
-  margin-top: clamp(32px, 5vh, 56px);
-  padding-top: clamp(20px, 3vh, 30px);
-  border-top: 1px solid var(--line);
+  margin-top: clamp(40px, 6vh, 72px);
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 .wk-foot-line {
-  font-size: clamp(12px, 1.2vw, 14px);
+  font-size: 15px;
   line-height: 1.7;
   color: var(--muted);
 }
@@ -817,10 +697,8 @@ canvas {
   display: inline-block;
   min-width: 3.2em;
   margin-right: 1.2em;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  font-size: 11px;
-  color: rgba(244, 241, 234, 0.4);
+  font-weight: 600;
+  color: rgba(244, 241, 234, 0.75);
 }
 .wk-foot-val.accent {
   color: #ffd9b3;
@@ -843,11 +721,10 @@ canvas {
   z-index: 70;
   /* 指定背景色 #1d2124（深炭蓝灰） */
   background: rgba(29, 33, 36, 0.98);
-  border: 1px solid var(--line);
   border-radius: 20px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  box-shadow: 0 50px 140px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 50px 140px rgba(0, 0, 0, 0.6); /* taste-skill-ignore: the dialog really floats */
   /* 弱化滚动条（Firefox） */
   scrollbar-width: thin;
   scrollbar-color: rgba(244, 241, 234, 0.16) transparent;
@@ -878,18 +755,20 @@ canvas {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  border: 1px solid var(--line);
-  background: rgba(10, 13, 20, 0.55);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  border: none;
+  display: grid;
+  place-items: center;
+  background: rgba(10, 13, 20, 0.72);
   color: var(--ink);
-  font-size: 15px;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.wk-detail-close svg {
+  width: 14px;
+  height: 14px;
 }
 .wk-detail-close:hover {
-  background: rgba(20, 26, 38, 0.8);
-  border-color: rgba(244, 241, 234, 0.3);
+  background: rgba(20, 26, 38, 0.92);
   transform: rotate(90deg);
 }
 
@@ -909,7 +788,6 @@ canvas {
   display: grid;
   place-items: center;
   padding: 6vh 8vw;
-  background: radial-gradient(120% 120% at 30% 20%, rgba(48, 55, 60, 0.5), rgba(29, 33, 36, 0.98));
 }
 .wk-detail-ph-text {
   font-family: 'Cormorant Upright', 'Chiron GoRound TC', 'PingFang SC', serif;
@@ -928,9 +806,7 @@ canvas {
   padding: clamp(28px, 5vh, 56px) clamp(24px, 5vw, 56px) clamp(40px, 8vh, 88px);
 }
 .wk-detail-head {
-  padding-bottom: clamp(20px, 3vh, 30px);
-  margin-bottom: clamp(24px, 4vh, 40px);
-  border-bottom: 1px solid var(--line);
+  margin-bottom: clamp(36px, 6vh, 64px);
 }
 .wk-detail-title {
   font-size: clamp(24px, 3.4vw, 42px);
@@ -940,8 +816,8 @@ canvas {
 }
 .wk-detail-sub {
   margin-top: 0.7em;
-  font-size: clamp(12px, 1.2vw, 14px);
-  letter-spacing: 0.08em;
+  font-size: 15px;
+  letter-spacing: 0.02em;
   color: var(--muted);
 }
 .wk-detail-tags {
@@ -951,26 +827,25 @@ canvas {
   margin-top: 1.1em;
 }
 .wk-badge {
-  font-size: clamp(11px, 1.1vw, 12px);
-  letter-spacing: 0.04em;
+  font-size: 13px;
+  letter-spacing: 0.02em;
   line-height: 1;
-  padding: 6px 12px;
+  padding: 7px 12px;
   border-radius: 999px;
-  color: rgba(244, 241, 234, 0.78);
-  background: rgba(244, 241, 234, 0.05);
-  border: 1px solid var(--line);
+  color: rgba(244, 241, 234, 0.85);
+  background: rgba(244, 241, 234, 0.08);
 }
 .wk-detail-desc {
-  font-size: clamp(14px, 1.4vw, 16px);
-  line-height: 1.8;
-  color: rgba(244, 241, 234, 0.8);
+  font-size: clamp(16px, 1.4vw, 17px);
+  line-height: 1.7;
+  color: var(--ink);
 }
 
 /* markdown 正文排版 */
 .wk-md {
-  font-size: clamp(14px, 1.4vw, 16px);
-  line-height: 1.8;
-  color: rgba(244, 241, 234, 0.82);
+  font-size: clamp(16px, 1.4vw, 17px);
+  line-height: 1.7;
+  color: rgba(244, 241, 234, 0.9);
 }
 .wk-md > :first-child {
   margin-top: 0;
@@ -992,11 +867,12 @@ canvas {
 }
 .wk-md a {
   color: #ffd9b3;
-  text-decoration: none;
-  border-bottom: 1px solid rgba(255, 217, 179, 0.4);
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 217, 179, 0.4);
+  text-underline-offset: 0.2em;
 }
 .wk-md a:hover {
-  border-bottom-color: #ffd9b3;
+  text-decoration-color: #ffd9b3;
 }
 .wk-md ul,
 .wk-md ol {
@@ -1013,7 +889,6 @@ canvas {
   height: auto;
   margin: 1.6em 0;
   border-radius: 12px;
-  border: 1px solid var(--line);
 }
 .wk-md blockquote {
   margin: 1.4em 0;
@@ -1024,7 +899,7 @@ canvas {
 .wk-md hr {
   margin: 2em 0;
   border: none;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--line); /* taste-skill-ignore: markdown <hr> is content */
 }
 .wk-md code {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -1040,72 +915,30 @@ canvas {
   align-items: center;
   gap: 0.6em;
   margin-top: clamp(28px, 4vh, 44px);
+  min-height: 44px;
   padding: 12px 22px;
-  border: 1px solid rgba(255, 217, 179, 0.5);
   border-radius: 999px;
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  color: #ffd9b3;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #0a0e16;
+  background: #ffd9b3;
   text-decoration: none;
   white-space: nowrap;
-  transition: background 0.2s ease, gap 0.2s ease;
+  transition: background 0.2s ease, gap 0.2s ease, transform 0.1s ease-out;
 }
 .wk-detail-link:hover {
-  background: rgba(255, 217, 179, 0.1);
+  background: #ffe6cc;
   gap: 0.9em;
 }
 
-/* ---------- 加载遮罩：模型全部加载完成前覆盖全屏（进度环，无文字）---------- */
-.loading-screen {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #000000;
-  opacity: 1;
-  transition: opacity 0.6s ease;
-}
-
-.loading-screen.is-hidden {
+/* The 3D portrait fades in once me.glb is mounted; the page is readable before that */
+.scene-fade {
   opacity: 0;
-  pointer-events: none;
+  transition: opacity 0.9s ease;
 }
-
-.loading-ring {
-  width: clamp(56px, 8vw, 80px);
-  height: clamp(56px, 8vw, 80px);
-  animation: lrSpin 2.4s linear infinite;
-}
-
-.loading-ring svg {
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-
-.lr-track {
-  fill: none;
-  stroke: rgba(244, 241, 234, 0.12);
-  stroke-width: 3;
-}
-
-.lr-arc {
-  fill: none;
-  stroke: #6f906f;
-  stroke-width: 3;
-  stroke-linecap: round;
-  transform: rotate(-90deg);
-  transform-origin: 50% 50%;
-  transition: stroke-dashoffset 0.35s ease;
-  filter: drop-shadow(0 0 6px rgba(111, 144, 111, 0.55));
-}
-
-@keyframes lrSpin {
-  to {
-    transform: rotate(360deg);
-  }
+.scene-fade.is-ready {
+  opacity: 1;
 }
 
 /* ==================================================================
@@ -1119,8 +952,18 @@ canvas {
     border-radius: 16px;
     padding: 20px 22px;
   }
+  /* One pair of page margins on the phone: the résumé fills the .resume padding instead of hugging the right */
+  .timeline {
+    width: auto;
+    margin: 6vh 0 0;
+  }
+  .tl-entry {
+    padding-left: 22px;
+  }
   .resume-title {
-    text-shadow: 0 0 1px rgba(0, 0, 0, 0.9), 0 1px 2px rgba(0, 0, 0, 0.6), 0 0 22px rgba(8, 11, 18, 0.55);
+    width: auto;
+    margin: 0;
+    text-shadow: 0 0 1px rgba(0, 0, 0, 0.9), 0 1px 2px rgba(0, 0, 0, 0.6), 0 0 22px rgba(8, 11, 18, 0.55); /* taste-skill-ignore: phone title sits over the live 3D with no scrim */
   }
 
   /* Profile buttons scroll away with the hero instead of floating over the cards and covers;
@@ -1153,11 +996,6 @@ canvas {
   .wk-card {
     width: 100%;
     height: auto;
-    border-left: none;
-    border-top: 1px solid var(--line);
-  }
-  .wk-card:last-child {
-    border-right: none;
   }
   /* 竖排下横移进度条 / 提示无意义 */
   .wk-progress,
@@ -1189,13 +1027,7 @@ canvas {
     font-size: clamp(27px, 7.4vw, 36px);
   }
   .wk-line-name {
-    font-size: 15.5px;
-  }
-  .wk-line-num {
-    font-size: 12.5px;
-  }
-  .wk-line-tag {
-    font-size: 11.5px;
+    font-size: 16px;
   }
 }
 
@@ -1208,7 +1040,6 @@ canvas {
   z-index: 20;
   max-width: min(420px, 86vw);
   padding: 16px 22px;
-  border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--panel);
   font-size: 14px;
@@ -1234,16 +1065,14 @@ canvas {
   height: 34px;
   color: var(--muted);
   background: rgba(12, 16, 24, 0.78);
-  border: 1px solid var(--line);
   border-radius: 999px;
   backdrop-filter: blur(10px);
-  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  transition: color 0.2s ease, background 0.2s ease, transform 0.1s ease-out;
 }
 .top-links a:hover,
 .top-links a:focus-visible {
   color: var(--ink);
   background: rgba(20, 26, 38, 0.92);
-  border-color: rgba(244, 241, 234, 0.3);
 }
 .top-links svg {
   width: 16px;
@@ -1252,7 +1081,49 @@ canvas {
 
 /* No WebGL: the scene's own gradient sky as a static backdrop */
 .scene-fallback {
-  background: linear-gradient(to top, #dbd3b5, #6f906f);
+  background: linear-gradient(to top, #dbd3b5, #6f906f); /* taste-skill-ignore: stands in for the 3D sky when WebGL is missing */
+}
+
+/* Keyboard focus is always visible, in the page's one accent */
+:focus-visible {
+  outline: 2px solid #ffd9b3;
+  outline-offset: 3px;
+}
+.wk-line-btn:focus-visible {
+  outline: 2px solid #ffd9b3;
+  outline-offset: 2px;
+}
+
+/* Feedback on press, not on release */
+.top-links a:active,
+.tl-logo:active,
+.wk-detail-close:active,
+.wk-detail-link:active {
+  transform: scale(0.94);
+  transition-duration: 0.1s;
+}
+.wk-line-btn:active .wk-line-name {
+  color: #ffd9b3;
+}
+
+/* Reduced transparency: frosted layers become solid */
+@media (prefers-reduced-transparency: reduce) {
+  .glass-rail {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(10, 14, 22, 0.6);
+  }
+  .top-links a,
+  .wk-detail-backdrop {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .top-links a {
+    background: #0c1018;
+  }
+  .wk-detail-backdrop {
+    background: rgba(4, 6, 10, 0.85);
+  }
 }
 
 /* Reduced motion: no smooth scrolling and no decorative loops / entrance slides */
@@ -1260,14 +1131,23 @@ canvas {
   html {
     scroll-behavior: auto;
   }
+  .top-links a:active,
+  .tl-logo:active,
+  .tl-logo:hover,
+  .wk-detail-close:active,
+  .wk-detail-close:hover,
+  .wk-detail-link:active {
+    transform: none;
+  }
   .about-intro,
   .scroll-cue-label,
-  .scroll-cue-dot,
-  .loading-ring {
+  .scroll-cue-dot {
     animation: none;
   }
-  .wk-line-btn,
-  .lr-arc {
+  .wk-line-btn {
     transition: none;
+  }
+  .scene-fade {
+    transition-duration: 0.3s;
   }
 }

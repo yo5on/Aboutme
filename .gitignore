@@ -19,3 +19,8 @@ scripts/compress-media.log
 # 本地工具与部署产物（含本地路径/服务器信息，不入库）
 .claude/
 deploy/
+
+# Local design-tool files (taste-skill), not part of the site
+.agents/
+.taste-skill/
+skills-lock.json
