@@ -1151,3 +1151,51 @@ canvas {
     transition-duration: 0.3s;
   }
 }
+
+
+/* UI audit refinement: keep the moving portrait, but give résumé text a stable, editorial surface. */
+.tl-body {
+  background: rgba(10, 13, 20,  0.42);
+  border: 1px solid rgba(244, 241, 234, 0.1);
+  border-radius: 16px;
+  padding: 16px 20px;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.12);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  transition: background-color 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+}
+@media (hover: hover) and (min-width: 641px) {
+  .tl-entry:hover .tl-body {
+    background: rgba(10, 13, 20, 0.58);
+    border-color: rgba(255, 217, 179, 0.3);
+    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.2);
+  }
+}
+:where(a, button):focus-visible {
+  outline: 2px solid #ffd9b3;
+  outline-offset: 4px;
+}
+.wk-line-btn:focus-visible,
+.wk-detail-close:focus-visible,
+.wk-detail-link:focus-visible {
+  border-radius: 5px;
+}
+@media (max-width: 640px) {
+  .tl-body {
+    padding: 16px;
+    background: rgba(10, 13, 20, 0.54);
+  }
+  .wk-card {
+    border-top: 1px solid rgba(244, 241, 234, 0.12);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .tl-body {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: #10141c;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tl-body { transition: none; }
+}
