@@ -85,6 +85,12 @@ Aboutme/
 
 The 3D model `me.glb` and personal portfolio content are project assets. The file `LICENSE-sen-3d-resume` relates to the upstream `sen-3d-resume` source used as a starting point; it should not be treated as a blanket licence for the personal model, artwork or résumé content.
 
-<h2 align="center"><samp><b>Author</b></samp></h2>
+<div align="center">
 
-**Yoson** · [GitHub](https://github.com/yo5on) · [LinkedIn](https://www.linkedin.com/in/yo5on)
+---
+
+<samp><strong>Yoson</strong> · software, AI/ML and interactive projects</samp>
+
+<samp><a href="https://github.com/yo5on">github.com/yo5on</a> · <a href="https://www.linkedin.com/in/yo5on">LinkedIn</a></samp>
+
+</div>
