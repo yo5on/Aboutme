@@ -19,7 +19,9 @@
 <div align="center"><sub>Part of the wider portfolio work: [Personal-website](https://github.com/yo5on/Personal-website).</sub></div>
 
 
-<h2 align="center"><samp><b>Features</b></samp></h2>
+---
+
+<div align="center"><samp><b>Features</b></samp></div>
 
 - <samp>Interactive 3D scene rendered with Three.js and React Three Fiber.</samp>
 - <samp>Scroll-driven presentation using Framer Motion.</samp>
@@ -28,7 +30,9 @@
 - <samp>Reduced-motion handling and a fallback message if the model cannot load.</samp>
 - <samp>GitHub Actions deployment to GitHub Pages when changes are pushed to `master`.</samp>
 
-<h2 align="center"><samp><b>Tech Stack</b></samp></h2>
+---
+
+<div align="center"><samp><b>Tech Stack</b></samp></div>
 
 - <samp>React 18 and TypeScript</samp>
 - <samp>Vite</samp>
@@ -36,7 +40,9 @@
 - <samp>Framer Motion</samp>
 - <samp>Zustand for shared state</samp>
 
-<h2 align="center"><samp><b>Run Locally</b></samp></h2>
+---
+
+<div align="center"><samp><b>Run Locally</b></samp></div>
 
 <samp>Requires Node.js 22 (the deployment workflow uses Node.js 22).</samp>
 
@@ -49,7 +55,9 @@ npm run dev
 
 <samp>Vite prints the local development URL in the terminal.</samp>
 
-<h2 align="center"><samp><b>Checks and Production Build</b></samp></h2>
+---
+
+<div align="center"><samp><b>Checks and Production Build</b></samp></div>
 
 ```bash
 npm run lint
@@ -60,7 +68,9 @@ npm run preview
 
 <samp>The production build is written to `dist/`. The deployment workflow builds the project and publishes that directory to GitHub Pages.</samp>
 
-<h2 align="center"><samp><b>Project Structure</b></samp></h2>
+---
+
+<div align="center"><samp><b>Project Structure</b></samp></div>
 
 ```text
 Aboutme/
@@ -81,7 +91,9 @@ Aboutme/
 └── vite.config.ts
 ```
 
-<h2 align="center"><samp><b>Model and Licensing Notes</b></samp></h2>
+---
+
+<div align="center"><samp><b>Model and Licensing Notes</b></samp></div>
 
 <samp>The 3D model `me.glb` and personal portfolio content are project assets. The file `LICENSE-sen-3d-resume` relates to the upstream `sen-3d-resume` source used as a starting point; it should not be treated as a blanket licence for the personal model, artwork or résumé content.</samp>
 
